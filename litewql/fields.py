@@ -54,7 +54,11 @@ class Field(object):
             raise CastError(e)
 
     def execute_model(self, data):
-        model = self.model_cls(self)
+        context = {}
+        if self.parent_model and self.parent_model.context:
+            context = self.parent_model.context
+
+        model = self.model_cls(self, context)
 
         if isinstance(data, (list, set, tuple)):
             _data = []

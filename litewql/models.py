@@ -6,8 +6,9 @@ from litewql.fields import FieldsFactory
 
 class Model(object):
 
-    def __init__(self, parent_field=None):
+    def __init__(self, parent_field=None, context=None):
         self.parent_field = parent_field
+        self.context = context or {}
 
     @classmethod
     def _get_res_object(cls):
@@ -88,7 +89,7 @@ class Model(object):
 
         for field_alias, field in fields.items():
             field_resolver = self.get_resolver(field)
-            field_data = field_resolver(field, init_data)
+            field_data = field_resolver(field, init_data, self.context)
 
             res_obj[field_alias] = field_data
 
@@ -123,7 +124,7 @@ class AsyncModel(Model):
 
     async def fetch_fields_data(self, fields, init_data=None):
         results = await asyncio.gather(*[
-            self.get_resolver(field)(field, init_data)
+            self.get_resolver(field)(field, init_data, self.context)
             for field in fields.values()
         ])
 
@@ -134,6 +135,7 @@ class AsyncModel(Model):
 
         for field_alias, field_data in fields_data.items():
             field = fields[field_alias]
+            # TODO: isawaitable
             res_obj[field_alias] = await field.represent(field_data)
 
         return res_obj
